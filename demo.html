@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <script src="https://unpkg.com/vue/dist/vue.js"></script>
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+    <title>练习</title>
+    <style type="text/css">
+       .tb{
+            width:800px;
+            border-collapse: collapse;
+            margin: 30px auto;
+        }
+        .tb th{
+            background-color:aquamarine;
+            color: white;
+            font-size: 16px;
+            padding: 5px;
+            border: solid 1px black;
+            text-align: center;
+        }
+        .tb td{
+            padding: 5px;
+            border: solid 1px black;
+            text-align: center;
+        }
+        .btn{
+            width: 800px;
+            margin: 10px auto;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <form class="btn">
+            <el-button @click="delPart">批量删除</el-button>
+            <el-button @click="dialogFormVisible = true">新增</el-button>
+        </form>
+        <el-dialog title="新增" :visible.sync="dialogFormVisible" style="width:1200px">
+            <el-form :model="form">
+                <el-form-item label="姓名" :label-width="formLabelWidth">
+                    <el-input v-model="form.name" autocomplete="off"></el-input>
+                </el-form-item>
+                <el-form-item label="性别" :label-width="formLabelWidth">
+                    <el-input v-model="form.sex" autocomplete="off"></el-input>
+                </el-form-item>
+            </el-form>
+            <div slot="footer" class="dialog-footer">
+                <el-button @click="dialogFormVisible = false">取 消</el-button>
+                <el-button type="primary" @click="addData">确 定</el-button>
+            </div>
+        </el-dialog>
+        <table class="tb">
+            <tr>
+               <th><input type="checkbox"  v-model="checkAll" ></th>
+               <th>姓名</th>
+               <th>性别</th>
+               <th>操作</th>
+            </tr>
+            <tr v-show="list.length==0">
+                <td colspan="4">当前列表无数据</td>
+            </tr>
+            <tr v-for="(item,index) in list" :key='index'>
+                <td><input type="checkbox" name="checkbox" v-model="item.check"></td>
+                <td>{{item.name}}</td>
+                <td>{{item.sex}}</td>
+                <td>
+                    <a href="javascript:void (0)" @click="delData(index)">删除</a>
+                     &nbsp;&nbsp;
+                    <a href="javascript:void(0)"  type="text" @click="modifyData(index)">修改</a>
+                    <el-dialog title="修改" :visible.sync="FormVisible" style="width:1200px">
+                        <el-form :model="form">
+                            <el-form-item label="姓名" :label-width="formLabelWidth">
+                                <el-input v-model="form.pname" autocomplete="off"></el-input>
+                            </el-form-item>
+                            <el-form-item label="性别" :label-width="formLabelWidth">
+                                <el-input v-model="form.psex" autocomplete="off"></el-input>
+                            </el-form-item>
+                        </el-form>
+                        <div slot="footer" class="dialog-footer">
+                            <el-button @click="FormVisible = false">取 消</el-button>
+                            <el-button type="primary" @click="modifyDataCim()">确 定</el-button>
+                        </div>
+                    </el-dialog>
+                </td>
+            </tr>
+        </table>
+        <div style=" width:800px; margin:10px auto">
+            <el-pagination
+                @size-change="handleSizeChange"
+                @current-change="handleCurrentChange"
+                :current-page="currentPage"
+                :page-sizes="[5]" 
+                :page-size="pagesize"         
+                layout="total, sizes, prev, pager, next, jumper"
+                :total="list.length">   
+            </el-pagination>
+        </div>
+    </div>
+</body>
+<script>
+    new Vue ({
+        el:'#app',
+        data:{
+            currentPage:1, //初始页
+            pagesize:5,    //    每页的数据
+            modifyIndex:'',
+            list:[
+                {   id:'1',
+                    name:'刘备',
+                    sex:'男',
+                    check:true
+                },
+                {   id:'2',
+                    name:'小乔',
+                    sex:'女',
+                    check:false
+                },
+                {   id:'3',
+                    name:'曹操',
+                    sex:'男',
+                    check:false
+                },
+                {   id:'4',
+                    name:'貂蝉',
+                    sex:'女',
+                    check:false
+                },
+                {   id:'5',
+                    name:'张飞',
+                    sex:'男',
+                    check:false
+                },
+                {   id:'6',
+                    name:'关羽',
+                    sex:'男',
+                    check:false
+                },
+                {   id:'7',
+                    name:'大乔',
+                    sex:'女',
+                    check:false
+                },
+            ],
+            dialogFormVisible: false,
+            FormVisible : false,
+            form: {
+                name: '',
+                sex:'',
+                pname:'',
+                psex:''
+            },
+            formLabelWidth: '120px'
+        },
+        computed: {
+            checkAll: {
+                set (newValue) {
+                    this.list.forEach(item => {
+                        item.check = newValue
+                    })
+                },
+                get () {
+                    let checkLen = 0;
+                    let _ischeckAll = false;
+                    this.list.forEach(item => {
+                        if (item.check) {
+                            checkLen ++
+                        }
+                    })
+
+                    if (checkLen == this.list.length) {
+                        _ischeckAll = true
+                    }
+
+                    return _ischeckAll
+                }
+            }
+        },
+        methods:{
+            // //全选
+            // selectAll () {
+            //     this.list.forEach(item => {
+            //         item.check = this.checked 
+            //     });
+            // },
+            // //所有的都选中
+            // select (item) {
+            //     if (!item.check) {
+            //         this.checked = false      
+            //     }
+            //     let i=0;
+            //     this.list.forEach(item => {
+            //         if (item.check) {
+            //             i++  
+            //             console.log(i)          
+            //         }
+            //         if (i == this.list.length) {
+            //             this.checked = true    
+            //         }
+            //     })
+            // },
+            //删除
+            delData (index) {
+                // var index = this.list.findIndex(item => {
+                //     return item.id == id})
+                console.log(index)
+                this.$confirm('此操作将永久删除该文件, 是否继续?', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'warning'
+                }).then(() => {
+                    this.list.splice(index, 1)
+                this.$message({
+                    type: 'success',
+                    message: '删除成功!'
+                });
+                }).catch(() => {
+                this.$message({
+                    type: 'info',
+                    message: '已取消删除'
+                }); 
+                });
+                // if (!confirm('是否要删除数据')) {
+                //     return
+                // }
+                // var index = this.list.findIndex(item => {
+                //     return item.id == id
+                // })
+                // this.list.splice(index, 1)
+            },
+            //增加
+            addData () {
+                let p = {name: this.form.name, sex: this.form.sex}
+                this.dialogFormVisible = false
+                this.list.unshift(p)
+                this.form.name = '',
+                this.form.sex = ''
+            },
+            //批量删除
+            delPart () {
+             
+                let delId = [];
+                this.list.forEach(item => {
+                    if (item.check) {
+                        delId.push(item.id)
+                    }
+                })
+                console.log(delId) 
+                this.$confirm('此操作将永久删除该文件, 是否继续?', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'warning'
+                }).then(() => {
+                    this.list = this.list.filter(item => delId.indexOf(item.id) === -1)
+                    delId = []
+                this.$message({
+                    type: 'success',
+                    message: '删除成功!'
+                });
+                }).catch(() => {
+                this.$message({
+                    type: 'info',
+                    message: '已取消删除'
+                }); 
+                });
+                // let delId = [];
+                // this.list.forEach(item => {
+                //     if (item.check) {
+                //         delId.push(item.id)
+                //     }
+                // })
+                // console.log(delId)
+                // this.list = this.list.filter(item => delId.indexOf(item.id) === -1)  //相当于（item =>{ return delId.indexOf(item.id) === -1}
+                // //    delId = []   //把数组清空。和下面的删除方法一样
+                // this.list.forEach((item,index) => {
+                //     if (delId.indexOf(item.id) >=0) {
+                //         this.list.splice(index,1)
+                //     }   
+                // })
+            },
+            //修改
+            modifyData (index) {
+                this.FormVisible = true
+                this.modifyIndex = index
+                this.form.pname = this.list[index].name
+                this.form.psex = this.list[index].sex
+               },
+            //修改的确定
+            modifyDataCim () {
+                this.FormVisible=false
+                index =  this.modifyIndex
+                this.list[index].name = this.form.pname
+                this.list[index].sex =this.form.psex
+                 },
+            handleSizeChange (size) {
+                this.pagesize = size;
+                console.log(this.pagesize)  //每页下拉显示数据
+            },
+            handleCurrentChange (currentPage){
+                this.currentPage = currentPage;
+                console.log(this.currentPage)  //点击第几页
+            },
+        }
+
+    })
+</script>
+</html>
